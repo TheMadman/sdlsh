@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+from sys import stdin
+import re
+
+print("# opcode file generated from opcode-generator\n")
+
+enum = re.compile(r"enum\s+SDL_EventType\s?{")
+enum_value = re.compile(r"\s*(\w+)(?:\s*=\s*(\w+))?,?")
+
+file = stdin.read()
+
+processed = {}
+opcode = 0
+while True:
+    enum_match = enum.search(file)
+    if not enum_match:
+        break
+
+    file = file[enum_match.end():]
+
+    while True:
+        enum_value_match = enum_value.match(file)
+        if not enum_value_match:
+            break
+
+        if enum_value_match[2] is not None:
+            try:
+                opcode = int(enum_value_match[2], 0)
+            except ValueError:
+                opcode = processed[enum_value_match[2]]
+        print(f"{enum_value_match[1].lower()}	{opcode}")
+        processed[enum_value_match[1]] = opcode
+        file = file[enum_value_match.end():]
+        opcode += 1
